@@ -7,26 +7,55 @@ type Block struct {
 	Valid     bool // 有效位
 }
 
-// SET结构，每个SET包含4个块
 type Set struct {
-	Blocks [4]Block
+	Blocks []Block
+}
+
+// 缓存配置结构
+type CacheConfig struct {
+	BlockNumber int // 缓存大小
+	WayNum      int // N-way set associative
+	SetNum      int // 组数
+	LineSize    int // 行大小
 }
 
 // cache ,4way = 4block/per
 type Cache struct {
-	Sets        [8]Set
+	config      CacheConfig
+	Sets        []Set
 	AccessCount int
 	HitCount    int
 	MissCount   int
 }
 
-func NewCache() *Cache {
-	return &Cache{}
+func NewCache(way, blockNumber, lineSize int) *Cache {
+
+	var (
+		SetNum = blockNumber / way
+		cache  = &Cache{
+			config: CacheConfig{
+				WayNum:      way,
+				SetNum:      SetNum,
+				LineSize:    lineSize,
+				BlockNumber: blockNumber,
+			},
+			Sets: make([]Set, SetNum),
+		}
+	)
+
+	// 初始化每个Set
+	for i := range cache.Sets {
+		cache.Sets[i] = Set{
+			Blocks: make([]Block, way),
+		}
+	}
+
+	return cache
 }
 
 // 根据序列号获取对应的SET索引
 func (c *Cache) GetSetIndex(seqNumber int) int {
-	return seqNumber % 8
+	return seqNumber % (c.config.SetNum)
 }
 
 func (c *Cache) Access(seqNumber int) (bool, int) {
@@ -38,8 +67,7 @@ func (c *Cache) Access(seqNumber int) (bool, int) {
 
 	c.AccessCount++
 
-	// 检查是否命中
-	for i := 0; i < 4; i++ {
+	for i := 0; i < c.config.WayNum; i++ {
 		if set.Blocks[i].Valid && set.Blocks[i].SeqNumber == seqNumber {
 			c.HitCount++
 			set.Blocks[i].Age = c.AccessCount
@@ -47,14 +75,11 @@ func (c *Cache) Access(seqNumber int) (bool, int) {
 		}
 	}
 
-	// 未命中
 	c.MissCount++
 
-	// 查找空块或替换最老的块
 	replaceIndexOfYoungest := 0
 
-	// 优先查找无效块
-	for i := 0; i < 4; i++ {
+	for i := 0; i < c.config.WayNum; i++ {
 		if !set.Blocks[i].Valid {
 			replaceIndexOfYoungest = i
 			break
@@ -87,12 +112,13 @@ func (c *Cache) GetStats() map[string]float64 {
 		stats["missRate"] = missRate
 
 		// Tavg = h*C + (1-h)*M
-		// C = 1ns (缓存访问时间)
-		// M = 1 + 16*10 + 1 = 162ns (未命中惩罚：检查缓存 + 加载16个字 + 写入缓存)
+		// C = 1ns
+		// M = 1 + 16*10 + 1 = 162ns
 		cacheAccessTime := 1.0
-		missPenalty := 162.0 // 1 + 16*10 + 1
+		//missPenalty := 162.0 // 1 + 16*10 + 1
+		missPenalty := c.config.LineSize*10 + 1 + 1
 
-		stats["avgAccessTime"] = hitRate*cacheAccessTime + missRate*missPenalty
+		stats["avgAccessTime"] = hitRate*cacheAccessTime + missRate*float64(missPenalty)
 		stats["totalAccessTime"] = float64(c.AccessCount) * stats["avgAccessTime"]
 	}
 

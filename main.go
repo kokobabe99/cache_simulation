@@ -22,9 +22,9 @@ type AccessRecord struct {
 
 var records []AccessRecord
 
-func runTestWithAnimation(name string, sequence []int, table *widget.Table, progress *widget.ProgressBar, updateUI func()) map[string]float64 {
+func runTestWithAnimation(name string, waySize int, blockSize int, lineSize int, sequence []int, table *widget.Table, progress *widget.ProgressBar, updateUI func()) map[string]float64 {
 	var (
-		cache = NewCache()
+		cache = NewCache(waySize, blockSize, lineSize)
 		total = len(sequence)
 	)
 	records = make([]AccessRecord, 0)
@@ -56,12 +56,23 @@ func main() {
 	// Settings input
 	cacheSize := widget.NewEntry()
 	cacheSize.SetText("32")
+
+	waySize := widget.NewEntry()
+	waySize.SetText("4")
+
+	lineSize := widget.NewEntry()
+	lineSize.SetText("16")
+
 	settingsCard := widget.NewCard(
 		"Parameters",
 		"Configure cache settings",
 		container.NewGridWithColumns(2,
 			widget.NewLabel("Cache Blocks:"),
 			cacheSize,
+			widget.NewLabel("way Size:"),
+			waySize,
+			widget.NewLabel("line Size:"),
+			lineSize,
 		),
 	)
 
@@ -96,7 +107,7 @@ func main() {
 			label.Alignment = fyne.TextAlignCenter
 
 			if i.Row == -1 {
-				headers := []string{"Seq", "Hit", "Miss", "Set"}
+				headers := []string{"Seq", "Hit ✓ ", "Miss ✗ ", "Set"}
 				label.SetText(headers[i.Col])
 				label.TextStyle = fyne.TextStyle{Bold: true}
 				return
@@ -158,7 +169,7 @@ func main() {
 
 	visualizationCard := widget.NewCard(
 		"Visualization",
-		"Process table (Seq , Hit , Miss , Set) ",
+		"Process table (Seq , Hit ✓, Miss ✗, Set) ",
 		container.NewVBox(
 			progress,
 			// container.NewPadded(tableHeader),
@@ -172,11 +183,13 @@ func main() {
 		records = make([]AccessRecord, 0)
 		myWindow.Canvas().Refresh(accessTable)
 		progress.SetValue(0) // 重置进度条
-		n, _ := strconv.Atoi(cacheSize.Text)
-		//seq := GenerateSameSetSequence(1)
-		//seq2 := GenerateSameSetSequence(1)
-		seq := GenerateSequential(n) //GenerateSequential
-		stats := runTestWithAnimation("Sequential", seq, accessTable, progress, func() {
+
+		b, _ := strconv.Atoi(cacheSize.Text)
+		w, _ := strconv.Atoi(waySize.Text)
+		l, _ := strconv.Atoi(lineSize.Text)
+
+		seq := GenerateSequential(b) //GenerateSequential
+		stats := runTestWithAnimation("Sequential", w, b, l, seq, accessTable, progress, func() {
 			myWindow.Canvas().Refresh(accessTable)
 		})
 		displayResults(results, "Sequential", stats)
@@ -187,9 +200,12 @@ func main() {
 		records = make([]AccessRecord, 0)
 		myWindow.Canvas().Refresh(accessTable)
 		progress.SetValue(0) // 重置进度条
-		n, _ := strconv.Atoi(cacheSize.Text)
-		seq := GenerateRandom(n)
-		stats := runTestWithAnimation("Random", seq, accessTable, progress, func() {
+		b, _ := strconv.Atoi(cacheSize.Text)
+		w, _ := strconv.Atoi(waySize.Text)
+		l, _ := strconv.Atoi(lineSize.Text)
+
+		seq := GenerateRandom(b)
+		stats := runTestWithAnimation("Random", w, b, l, seq, accessTable, progress, func() {
 			myWindow.Canvas().Refresh(accessTable)
 		})
 		displayResults(results, "Random", stats)
@@ -200,9 +216,11 @@ func main() {
 		records = make([]AccessRecord, 0)
 		myWindow.Canvas().Refresh(accessTable)
 		progress.SetValue(0) // 重置进度条
-		n, _ := strconv.Atoi(cacheSize.Text)
-		seq := GenerateMidRepeat(n)
-		stats := runTestWithAnimation("Mid-Repeat", seq, accessTable, progress, func() {
+		b, _ := strconv.Atoi(cacheSize.Text)
+		w, _ := strconv.Atoi(waySize.Text)
+		l, _ := strconv.Atoi(lineSize.Text)
+		seq := GenerateMidRepeat(b)
+		stats := runTestWithAnimation("Mid-Repeat", w, b, l, seq, accessTable, progress, func() {
 			myWindow.Canvas().Refresh(accessTable)
 		})
 		displayResults(results, "Mid-Repeat", stats)

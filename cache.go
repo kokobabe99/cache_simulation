@@ -43,7 +43,6 @@ func NewCache(way, blockNumber, lineSize int) *Cache {
 		}
 	)
 
-	// 初始化每个Set
 	for i := range cache.Sets {
 		cache.Sets[i] = Set{
 			Blocks: make([]Block, way),
@@ -89,7 +88,6 @@ func (c *Cache) Access(seqNumber int) (bool, int) {
 		}
 	}
 
-	// 替换块
 	set.Blocks[replaceIndexOfYoungest].SeqNumber = seqNumber
 	set.Blocks[replaceIndexOfYoungest].Age = c.AccessCount
 	set.Blocks[replaceIndexOfYoungest].Valid = true

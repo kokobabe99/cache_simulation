@@ -229,41 +229,35 @@ go run .
 
 ## to build
 
-- macOS
+```bash
 
-  ```bash
-  fyne package -os darwin -icon docs/logo.png
-  ```
+env GOOS="windows" GOARCH="amd64" CGO_ENABLED="1" CC="x86_64-w64-mingw32-gcc" go build
 
-- Linux
+go build -o app main.go
 
-  ```bash
-  fyne package -os linux -icon docs/logo.png
-
-  ```
+env CGO_ENABLED="0" GOOS="linux" GOARCH="amd64" go build
+```
 
 - Windows
-  ```bash
-  fyne package -os windows -icon docs/logo.png
-  ```
+
+```bash
+env GOOS="windows" GOARCH="amd64" CGO_ENABLED="1" CC="x86_64-w64-mingw32-gcc" go build
+```
+
+```bash
+env CGO_ENABLED="0" GOOS="linux" GOARCH="amd64" go build
+```
 
 ### executable file included
 
-- macOS
-  ```bash
-  /execute/cache_simulator_mac
-  ```
-- Linux
-
-  ```bash
-  /execute/cache_simulator_unix
-  ```
-
 - Windows
-  ```bash
-  /execute/cache_simulator_win.exe
-  ```
+
+```bash
+cache_simulator.exe
+```
+
+--
 
 # Demo Video
 
-![Cache Simulator Interface](docs/demo.mov)
+https://www.youtube.com/watch?v=8LixTI_R7v0

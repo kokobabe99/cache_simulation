@@ -210,8 +210,6 @@ which continue up to 2n. Then, repeat the sequence four times. Example: if n=8, 
 5. The 4-way set-associative design shows good performance for repeated access patterns
    These results align with theoretical cache behavior and demonstrate the fundamental principles of cache memory systems.
 
-## Demo Video
-
 ## Build and Run
 
 ### Prerequisites
